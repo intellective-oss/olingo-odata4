@@ -32,10 +32,12 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.olingo.client.api.ODataClient;
 import org.apache.olingo.client.api.communication.request.batch.ODataBatchLineIterator;
 import org.apache.olingo.client.api.communication.response.ODataResponse;
+import org.apache.olingo.client.api.http.HttpClientFactory;
 import org.apache.olingo.client.api.http.NoContentException;
 import org.apache.olingo.client.core.ConfigurationImpl;
 import org.apache.olingo.client.core.communication.util.PipedInputStream;
@@ -103,7 +105,7 @@ public abstract class AbstractODataResponse implements ODataResponse {
    * Batch info (if to be batched).
    */
   protected ODataBatchController batchInfo = null;
-  
+
   private byte[] inputContent = null;
 
   public AbstractODataResponse(
@@ -244,7 +246,9 @@ public abstract class AbstractODataResponse implements ODataResponse {
 
   @Override
   public void close() {
-    odataClient.getConfiguration().getHttpClientFactory().close(httpClient);
+    HttpClientFactory httpClientFactory = odataClient.getConfiguration().getHttpClientFactory();
+    httpClientFactory.close(res);
+    httpClientFactory.close(httpClient);
 
     if (batchInfo != null) {
       batchInfo.setValidBatch(false);
