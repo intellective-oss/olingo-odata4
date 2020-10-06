@@ -624,11 +624,11 @@
   <distributionManagement>
     <repository>
       <id>maven.intellective.com</id>
-      <url>https://maven.intellective.com/repository/third-party/</url>
+            <url>https://maven.intellective.com/repository/maven-thirdparty/</url>
     </repository>
     <snapshotRepository>
       <id>maven.intellective.com</id>
-      <url>https://maven.intellective.com/repository/third-party/</url>
+            <url>https://maven.intellective.com/repository/maven-thirdparty/</url>
     </snapshotRepository>
   </distributionManagement>
 
