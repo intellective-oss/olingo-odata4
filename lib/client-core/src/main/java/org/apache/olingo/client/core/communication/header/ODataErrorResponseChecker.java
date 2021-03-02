@@ -89,9 +89,10 @@ public final class ODataErrorResponseChecker {
                 }
             }
 
-            if (error != null &&
-                    (error.getDetails() == null || error.getDetails().isEmpty()) &&
-                    (error.getInnerError() == null || error.getInnerError().size() == 0)) {
+            if (statusLine.getStatusCode() >= 500 && error != null
+                    && (error.getCode() == null || error.getCode().isEmpty())
+                    && (error.getDetails() == null || error.getDetails().isEmpty())
+                    && (error.getInnerError() == null || error.getInnerError().size() == 0)) {
                 result = new ODataServerErrorException(statusLine);
             } else {
                 result = new ODataClientErrorException(statusLine, error);
