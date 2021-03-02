@@ -1,0 +1,9 @@
+<error xmlns="http://docs.oasis-open.org/odata/ns/metadata">
+    <code>500</code>
+    <message>Internal Server Error</message>
+    <details>
+        <detail>
+            <message>Method does not support entities of specific type</message>
+        </detail>
+    </details>
+</error>
