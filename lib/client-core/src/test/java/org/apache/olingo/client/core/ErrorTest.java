@@ -18,21 +18,9 @@
  */
 package org.apache.olingo.client.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Map;
-
 import org.apache.http.StatusLine;
 import org.apache.olingo.client.api.ODataClient;
 import org.apache.olingo.client.api.communication.ODataClientErrorException;
-import org.apache.olingo.client.api.communication.ODataServerErrorException;
 import org.apache.olingo.client.api.serialization.ODataDeserializerException;
 import org.apache.olingo.client.core.communication.header.ODataErrorResponseChecker;
 import org.apache.olingo.commons.api.ex.ODataError;
@@ -40,6 +28,17 @@ import org.apache.olingo.commons.api.ex.ODataErrorDetail;
 import org.apache.olingo.commons.api.ex.ODataRuntimeException;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ErrorTest extends AbstractTest {
 
@@ -102,7 +101,63 @@ public class ErrorTest extends AbstractTest {
     assertNull(error.getDetails());
         
   }
-  
+
+  @Test
+  public void testJsonWithXmlContentType() throws Exception {
+    ODataClient odataClient = ODataClientFactory.getClient();
+    InputStream entity = getClass().getResourceAsStream("500error." + getSuffix(ContentType.JSON));
+    StatusLine statusLine = mock(StatusLine.class);
+    when(statusLine.getStatusCode()).thenReturn(500);
+    when(statusLine.toString()).thenReturn("Internal Server Error");
+
+    ODataClientErrorException exp = (ODataClientErrorException) ODataErrorResponseChecker.
+        checkResponse(odataClient, statusLine, entity, "xml");
+    assertTrue(exp.getMessage().contains("(500) Internal Server Error"));
+    ODataError error = exp.getODataError();
+    assertTrue(error.getMessage().startsWith("Internal Server Error"));
+    assertEquals(500, Integer.parseInt(error.getCode()));
+    assertEquals(2, error.getInnerError().size());
+    assertEquals("\"Method does not support entities of specific type\"", error.getInnerError().get("message"));
+    assertEquals("\"FaultException\"", error.getInnerError().get("type"));
+    assertNull(error.getDetails());
+
+  }
+
+  @Test
+  public void testXmlWithJsonContentType() throws Exception {
+    ODataClient odataClient = ODataClientFactory.getClient();
+    InputStream entity = getClass().getResourceAsStream("500error." + getSuffix(ContentType.APPLICATION_ATOM_XML));
+    StatusLine statusLine = mock(StatusLine.class);
+    when(statusLine.getStatusCode()).thenReturn(500);
+    when(statusLine.toString()).thenReturn("Internal Server Error");
+
+    ODataClientErrorException exp = (ODataClientErrorException) ODataErrorResponseChecker.
+            checkResponse(odataClient, statusLine, entity, "Json");
+    assertTrue(exp.getMessage().contains("(500) Internal Server Error"));
+    ODataError error = exp.getODataError();
+    assertTrue(error.getMessage().startsWith("Internal Server Error"));
+    assertEquals(500, Integer.parseInt(error.getCode()));
+    assertEquals(1, error.getDetails().size());
+    assertEquals("Method does not support entities of specific type", error.getDetails().get(0).getMessage());
+    assertNull(error.getInnerError());
+  }
+  @Test
+  public void testNoNsXmlWithJsonContentType() throws Exception {
+    ODataClient odataClient = ODataClientFactory.getClient();
+    InputStream entity = getClass().getResourceAsStream("500error1." + getSuffix(ContentType.APPLICATION_ATOM_XML));
+    StatusLine statusLine = mock(StatusLine.class);
+    when(statusLine.getStatusCode()).thenReturn(500);
+    when(statusLine.toString()).thenReturn("Internal Server Error");
+
+    ODataClientErrorException exp = (ODataClientErrorException) ODataErrorResponseChecker.
+            checkResponse(odataClient, statusLine, entity, "Json");
+    ODataError error = exp.getODataError();
+    assertEquals(500, Integer.parseInt(error.getCode()));
+    assertTrue(error.getMessage().contains("Internal Server Error"));
+    assertTrue(error.getMessage().contains("Method does not support entities of specific type"));
+    assertNull(error.getInnerError());
+  }
+
   @Test
   public void test2OLINGO1102() throws Exception {
     ODataClient odataClient = ODataClientFactory.getClient();
